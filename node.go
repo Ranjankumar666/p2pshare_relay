@@ -27,7 +27,7 @@ func CreateServer() {
 		PORT = "8080"
 	}
 	addresses := []string{
-		fmt.Sprintf("/ip4/127.0.0.1/tcp/%s/ws", PORT),
+		// fmt.Sprintf("/ip4/127.0.0.1/tcp/%s/ws", PORT),
 		fmt.Sprintf("/ip4/0.0.0.0/tcp/%s/ws", PORT),
 	}
 
