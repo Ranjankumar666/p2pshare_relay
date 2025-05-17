@@ -1,0 +1,51 @@
+# Binaries
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Build artifacts
+bin/
+build/
+dist/
+
+# Go workspace
+*.mod
+*.sum
+vendor/
+
+# Test binary cache
+*.coverprofile
+
+# Logs
+*.log
+
+# IDEs and editors
+.vscode/
+.idea/
+*.swp
+*~
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# GoLand and JetBrains
+*.iml
+*.ipr
+*.iws
+out/
+
+# By Go tools (e.g., Delve debugger)
+__debug_bin
+
+# If using WebAssembly
+*.wasm
+
+# Optional: include go.sum only if needed
+# go.sum
+
+# Node modules (if you have frontend too)
+node_modules/
