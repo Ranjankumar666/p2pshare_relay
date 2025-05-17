@@ -22,11 +22,12 @@ func CreateServer() {
 	_, cancel := context.WithCancel(context.Background())
 
 	defer cancel()
-	PORT := os.Getenv("PORT")
+	PORT, ok := os.LookupEnv("PORT")
 
-	if len(PORT) == 0 {
+	if !ok {
 		PORT = "8080"
 	}
+
 	addresses := []string{
 		// fmt.Sprintf("/ip4/127.0.0.1/tcp/%s/ws", PORT),
 		fmt.Sprintf("/ip4/0.0.0.0/tcp/%s/ws", PORT),
