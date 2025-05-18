@@ -22,7 +22,7 @@ func CreateServer() {
 	_, cancel := context.WithCancel(context.Background())
 
 	defer cancel()
-	PORT, ok := os.LookupEnv("PORT")
+	PORT, ok := os.LookupEnv("RELAY_PORT")
 
 	if !ok {
 		PORT = "8080"
