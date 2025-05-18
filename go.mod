@@ -1,6 +1,6 @@
 module relay_server
 
-go 1.24.3
+go 1.24.0
 
 require github.com/libp2p/go-libp2p v0.41.1
 
