@@ -1,7 +1,7 @@
 package main
 
 func main() {
-	CreateProxy()
-	CreateServer()
+	go CreateProxy()
+	go CreateServer()
 	select {}
 }
