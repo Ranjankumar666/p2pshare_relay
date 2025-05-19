@@ -12,10 +12,12 @@ import (
 	"github.com/libp2p/go-libp2p/p2p/host/autonat"
 	"github.com/libp2p/go-libp2p/p2p/muxer/yamux"
 	"github.com/libp2p/go-libp2p/p2p/protocol/circuitv2/relay"
+	"github.com/libp2p/go-libp2p/p2p/protocol/holepunch"
 	"github.com/libp2p/go-libp2p/p2p/protocol/identify"
 	"github.com/libp2p/go-libp2p/p2p/security/noise"
 	"github.com/libp2p/go-libp2p/p2p/transport/tcp"
 	"github.com/libp2p/go-libp2p/p2p/transport/websocket"
+	"github.com/multiformats/go-multiaddr"
 )
 
 func CreateServer() {
@@ -44,6 +46,9 @@ func CreateServer() {
 		libp2p.Muxer("/yamux/1.0.0", yamux.DefaultTransport),
 		libp2p.EnableRelay(),
 		libp2p.EnableAutoNATv2(),
+		libp2p.EnableHolePunching(),
+		libp2p.ForceReachabilityPrivate(),
+		libp2p.ForceReachabilityPublic(),
 	)
 
 	if err != nil {
@@ -55,11 +60,21 @@ func CreateServer() {
 		log.Fatalf("Failed to start relay v2 service: %v", err)
 	}
 
-	identify.NewIDService(server)
+	idService, _ := identify.NewIDService(server)
 
 	_, err = autonat.New(server)
 	if err != nil {
 		log.Fatalf("Failed to start AutoNAT: %v", err)
+	}
+
+	_, err = holepunch.NewService(server, idService, func() []multiaddr.Multiaddr {
+		log.Println("Getting listen addresses")
+
+		return server.Addrs()
+	})
+
+	if err != nil {
+		log.Fatalf("Failed to start hole punching service: %v", err)
 	}
 
 	log.Println("Relay server is running at:")
