@@ -7,7 +7,6 @@ import (
 	"os"
 
 	libp2p "github.com/libp2p/go-libp2p"
-	"github.com/libp2p/go-libp2p/core/event"
 	"github.com/libp2p/go-libp2p/core/network"
 	"github.com/libp2p/go-libp2p/p2p/host/autonat"
 	"github.com/libp2p/go-libp2p/p2p/muxer/yamux"
@@ -82,22 +81,30 @@ func CreateServer() {
 		log.Printf("%s/p2p/%s\n", addr, server.ID().String())
 	}
 
-	sub, _ := server.EventBus().Subscribe(new(event.EvtPeerConnectednessChanged))
+	// sub, _ := server.EventBus().Subscribe(new(event.EvtPeerConnectednessChanged))
 
-	// listen to peer connect and disconnect
-	go func() {
-		for e := range sub.Out() {
-			evt := e.(event.EvtPeerConnectednessChanged)
-			log.Printf("Peer %s changed state: %s\n", evt.Peer, evt.Connectedness)
-		}
-	}()
+	// // listen to peer connect and disconnect
+	// go func() {
+	// 	for e := range sub.Out() {
+	// 		evt := e.(event.EvtPeerConnectednessChanged)
+	// 		log.Printf("Peer %s changed state: %s\n", evt.Peer, evt.Connectedness)
+	// 		client.Reserve(context.Background())
+
+	// 	}
+	// }()
 
 	server.Network().Notify(&network.NotifyBundle{
 		ConnectedF: func(net network.Network, conn network.Conn) {
 			log.Printf("Connected: %s", conn.RemotePeer())
+
 		},
 		DisconnectedF: func(net network.Network, conn network.Conn) {
 			log.Printf("Disconnected: %s", conn.RemotePeer())
 		},
+	})
+
+	server.SetStreamHandler("/libp2p/circuit/relay/0.2.0", func(s network.Stream) {
+		log.Printf("Reservation attempt from: %s", s.Conn().RemotePeer())
+		s.Close() // Let relay module handle it normally after this
 	})
 }
