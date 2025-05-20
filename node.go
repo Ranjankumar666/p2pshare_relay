@@ -55,6 +55,7 @@ func CreateServer() {
 	}
 
 	_, err = relay.New(server)
+
 	if err != nil {
 		log.Fatalf("Failed to start relay v2 service: %v", err)
 	}
@@ -96,15 +97,24 @@ func CreateServer() {
 	server.Network().Notify(&network.NotifyBundle{
 		ConnectedF: func(net network.Network, conn network.Conn) {
 			log.Printf("Connected: %s", conn.RemotePeer())
+			peers := server.Peerstore()
+
+			log.Printf("\nConnected peers: %d", len(peers.Peers()))
+			for id, peerID := range peers.Peers() {
+
+				log.Printf("%d Peer ID: %s", id, peerID.String())
+			}
 
 		},
 		DisconnectedF: func(net network.Network, conn network.Conn) {
 			log.Printf("Disconnected: %s", conn.RemotePeer())
-		},
-	})
 
-	server.SetStreamHandler("/libp2p/circuit/relay/0.2.0", func(s network.Stream) {
-		log.Printf("Reservation attempt from: %s", s.Conn().RemotePeer())
-		s.Close() // Let relay module handle it normally after this
+			peers := server.Peerstore()
+
+			log.Printf("\nConnected peers: %d", len(peers.Peers()))
+			for id, peerID := range peers.Peers() {
+				log.Printf("%d Peer ID: %s", id, peerID.String())
+			}
+		},
 	})
 }
