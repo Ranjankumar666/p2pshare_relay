@@ -5,13 +5,15 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	libp2p "github.com/libp2p/go-libp2p"
 	"github.com/libp2p/go-libp2p/core/network"
 	"github.com/libp2p/go-libp2p/p2p/host/autonat"
 	"github.com/libp2p/go-libp2p/p2p/muxer/yamux"
-	"github.com/libp2p/go-libp2p/p2p/protocol/circuitv2/relay"
+	"github.com/libp2p/go-libp2p/p2p/net/connmgr"
 
+	"github.com/libp2p/go-libp2p/p2p/protocol/circuitv2/relay"
 	"github.com/libp2p/go-libp2p/p2p/protocol/holepunch"
 	"github.com/libp2p/go-libp2p/p2p/protocol/identify"
 	"github.com/libp2p/go-libp2p/p2p/security/noise"
@@ -22,6 +24,8 @@ import (
 
 func CreateServer() {
 	_, cancel := context.WithCancel(context.Background())
+
+	cgMgr, _ := connmgr.NewConnManager(200, 400, connmgr.WithGracePeriod(2*time.Minute))
 
 	defer cancel()
 	PORT, ok := os.LookupEnv("RELAY_PORT")
@@ -38,13 +42,13 @@ func CreateServer() {
 	id, _ := LoadOrCreateIdentity()
 
 	server, err := libp2p.New(
+		libp2p.ConnectionManager(cgMgr),
 		libp2p.ListenAddrStrings(addresses...),
 		libp2p.Identity(id),
 		libp2p.Transport(tcp.NewTCPTransport),
 		libp2p.Transport(websocket.New),
 		libp2p.Security(noise.ID, noise.New),
 		libp2p.Muxer("/yamux/1.0.0", yamux.DefaultTransport),
-		libp2p.EnableRelay(),
 		libp2p.EnableAutoNATv2(),
 		libp2p.EnableHolePunching(),
 		libp2p.ForceReachabilityPrivate(),
