@@ -11,6 +11,7 @@ import (
 	"github.com/libp2p/go-libp2p/p2p/host/autonat"
 	"github.com/libp2p/go-libp2p/p2p/muxer/yamux"
 	"github.com/libp2p/go-libp2p/p2p/protocol/circuitv2/relay"
+
 	"github.com/libp2p/go-libp2p/p2p/protocol/holepunch"
 	"github.com/libp2p/go-libp2p/p2p/protocol/identify"
 	"github.com/libp2p/go-libp2p/p2p/security/noise"
@@ -54,7 +55,7 @@ func CreateServer() {
 		log.Fatalf("Failed to create libp2p host: %v", err)
 	}
 
-	_, err = relay.New(server)
+	_, err = relay.New(server, relay.WithACL(&MyACLFilter{}))
 
 	if err != nil {
 		log.Fatalf("Failed to start relay v2 service: %v", err)
@@ -67,6 +68,8 @@ func CreateServer() {
 		log.Fatalf("Failed to start AutoNAT: %v", err)
 	}
 
+	/**
+	 */
 	_, err = holepunch.NewService(server, idService, func() []multiaddr.Multiaddr {
 		log.Println("Getting listen addresses")
 
@@ -81,18 +84,6 @@ func CreateServer() {
 	for _, addr := range server.Addrs() {
 		log.Printf("%s/p2p/%s\n", addr, server.ID().String())
 	}
-
-	// sub, _ := server.EventBus().Subscribe(new(event.EvtPeerConnectednessChanged))
-
-	// // listen to peer connect and disconnect
-	// go func() {
-	// 	for e := range sub.Out() {
-	// 		evt := e.(event.EvtPeerConnectednessChanged)
-	// 		log.Printf("Peer %s changed state: %s\n", evt.Peer, evt.Connectedness)
-	// 		client.Reserve(context.Background())
-
-	// 	}
-	// }()
 
 	server.Network().Notify(&network.NotifyBundle{
 		ConnectedF: func(net network.Network, conn network.Conn) {
@@ -117,4 +108,5 @@ func CreateServer() {
 			}
 		},
 	})
+
 }
