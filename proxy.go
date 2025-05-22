@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -9,7 +10,7 @@ import (
 	"os"
 )
 
-func CreateProxy() {
+func CreateProxy(ctx context.Context) {
 	RELAY_PORT, ok := os.LookupEnv("RELAY_PORT")
 
 	if !ok {
@@ -37,8 +38,27 @@ func CreateProxy() {
 		req.Host = targetURL.Host
 	}
 
-	http.HandleFunc("/", proxy.ServeHTTP)
+	handlers := http.NewServeMux()
 
-	log.Printf("Reverse proxy listening on :%s\n", PORT)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", PORT), nil))
+	handlers.HandleFunc("/", proxy.ServeHTTP)
+
+	server := &http.Server{
+		Addr:    fmt.Sprintf(":%s", PORT),
+		Handler: handlers,
+	}
+
+	go func() {
+		log.Printf("Reverse proxy listening on :%s\n", PORT)
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Printf("Proxy server error: %v", err)
+		}
+	}()
+
+	<-ctx.Done()
+	log.Println("Shutting down proxy")
+
+	if err := server.Close(); err != nil {
+		log.Printf("Error while closing proxy server: %s", err.Error())
+	}
+
 }

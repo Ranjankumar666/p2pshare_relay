@@ -22,12 +22,12 @@ import (
 	"github.com/multiformats/go-multiaddr"
 )
 
-func CreateServer() {
-	_, cancel := context.WithCancel(context.Background())
+func CreateServer(ctx context.Context) {
+	// _, cancel := context.WithCancel(context.Background())
 
 	cgMgr, _ := connmgr.NewConnManager(200, 400, connmgr.WithGracePeriod(2*time.Minute))
 
-	defer cancel()
+	// defer cancel()
 	PORT, ok := os.LookupEnv("RELAY_PORT")
 
 	if !ok {
@@ -59,12 +59,14 @@ func CreateServer() {
 		log.Fatalf("Failed to create libp2p host: %v", err)
 	}
 
+	// Relay
 	_, err = relay.New(server, relay.WithACL(&MyACLFilter{}))
 
 	if err != nil {
 		log.Fatalf("Failed to start relay v2 service: %v", err)
 	}
 
+	// Identity
 	idService, _ := identify.NewIDService(server)
 
 	_, err = autonat.New(server)
@@ -72,8 +74,7 @@ func CreateServer() {
 		log.Fatalf("Failed to start AutoNAT: %v", err)
 	}
 
-	/**
-	 */
+	// Holepunch
 	_, err = holepunch.NewService(server, idService, func() []multiaddr.Multiaddr {
 		log.Println("Getting listen addresses")
 
@@ -112,5 +113,13 @@ func CreateServer() {
 			}
 		},
 	})
+
+	<-ctx.Done()
+
+	log.Println("Shutting down relay")
+
+	if err := server.Close(); err != nil {
+		log.Printf("Error while shutting relay :%v", err)
+	}
 
 }
