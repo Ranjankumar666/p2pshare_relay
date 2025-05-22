@@ -18,8 +18,8 @@ import (
 	"github.com/libp2p/go-libp2p/p2p/protocol/identify"
 	"github.com/libp2p/go-libp2p/p2p/security/noise"
 	"github.com/libp2p/go-libp2p/p2p/transport/tcp"
+	libp2pwebrtc "github.com/libp2p/go-libp2p/p2p/transport/webrtc"
 	"github.com/libp2p/go-libp2p/p2p/transport/websocket"
-	libp2pwebtransport "github.com/libp2p/go-libp2p/p2p/transport/webtransport"
 	"github.com/multiformats/go-multiaddr"
 )
 
@@ -35,16 +35,10 @@ func CreateServer(ctx context.Context) {
 		PORT = "8080"
 	}
 
-	UDP_PORT, ok := os.LookupEnv("RELAY_UDP_PORT")
-
-	if !ok {
-		UDP_PORT = "9000"
-	}
-
 	addresses := []string{
 		// fmt.Sprintf("/ip4/127.0.0.1/tcp/%s/ws", PORT),
 		fmt.Sprintf("/ip4/0.0.0.0/tcp/%s/ws", PORT),
-		fmt.Sprintf("/ip4/0.0.0.0/udp/%s/quic-v1/webtransport", UDP_PORT), // QUIC/WebTransport
+		fmt.Sprintf("/ip4/0.0.0.0/udp/%s/webrtc-direct", PORT), // QUIC/WebTransport
 	}
 
 	id, _ := LoadOrCreateIdentity()
@@ -55,7 +49,7 @@ func CreateServer(ctx context.Context) {
 		libp2p.Identity(id),
 		libp2p.Transport(tcp.NewTCPTransport),
 		libp2p.Transport(websocket.New),
-		libp2p.Transport(libp2pwebtransport.New),
+		libp2p.Transport(libp2pwebrtc.New),
 		libp2p.Security(noise.ID, noise.New),
 		libp2p.Muxer("/yamux/1.0.0", yamux.DefaultTransport),
 		libp2p.EnableAutoNATv2(),
