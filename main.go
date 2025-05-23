@@ -11,7 +11,7 @@ import (
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 
-	go CreateProxy(ctx)
+	// go CreateProxy(ctx)
 	go CreateServer(ctx)
 
 	sigChannel := make(chan os.Signal, 1)

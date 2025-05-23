@@ -47,6 +47,7 @@ func CreateServer(ctx context.Context) {
 		libp2p.Security(noise.ID, noise.New),
 		libp2p.Muxer("/yamux/1.0.0", yamux.DefaultTransport),
 		libp2p.EnableRelayService(relay.WithACL(&MyACLFilter{})),
+		libp2p.EnableNATService(),
 		libp2p.EnableAutoNATv2(),
 		libp2p.EnableHolePunching(),
 		libp2p.ForceReachabilityPublic(),
