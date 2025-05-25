@@ -15,6 +15,7 @@ import (
 	"github.com/libp2p/go-libp2p/p2p/protocol/circuitv2/relay"
 	"github.com/libp2p/go-libp2p/p2p/protocol/identify"
 	"github.com/libp2p/go-libp2p/p2p/security/noise"
+	libp2ptls "github.com/libp2p/go-libp2p/p2p/security/tls"
 	"github.com/libp2p/go-libp2p/p2p/transport/tcp"
 	"github.com/libp2p/go-libp2p/p2p/transport/websocket"
 )
@@ -30,10 +31,16 @@ func CreateServer(ctx context.Context) {
 	if !ok {
 		PORT = "8080"
 	}
+	WSS_PORT, ok := os.LookupEnv("RELAY_WSS_PORT")
+
+	if !ok {
+		WSS_PORT = "443"
+	}
 
 	addresses := []string{
 		// fmt.Sprintf("/ip4/127.0.0.1/tcp/%s/ws", PORT),
 		fmt.Sprintf("/ip4/0.0.0.0/tcp/%s/ws", PORT),
+		fmt.Sprintf("/ip4/0.0.0.0/tcp/%s/wss", WSS_PORT),
 	}
 
 	id, _ := LoadOrCreateIdentity()
@@ -45,6 +52,7 @@ func CreateServer(ctx context.Context) {
 		libp2p.Transport(tcp.NewTCPTransport),
 		libp2p.Transport(websocket.New),
 		libp2p.Security(noise.ID, noise.New),
+		libp2p.Security(libp2ptls.ID, libp2ptls.New),
 		libp2p.Muxer("/yamux/1.0.0", yamux.DefaultTransport),
 		libp2p.EnableRelayService(relay.WithACL(&MyACLFilter{})),
 		libp2p.EnableNATService(),
@@ -67,6 +75,10 @@ func CreateServer(ctx context.Context) {
 	log.Println("Relay server is running at:")
 	for _, addr := range server.Addrs() {
 		log.Printf("%s/p2p/%s\n", addr, server.ID().String())
+	}
+
+	for _, p := range server.Mux().Protocols() {
+		log.Printf("Supported protocol: %s", p)
 	}
 
 	server.Network().Notify(&network.NotifyBundle{
